@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
+"""Defines a function that  provides some stats
+   about Nginx logs stored in MongoDB
 """
-Module 12-log_stats.py
-"""
+
 from pymongo import MongoClient
 
-if __name__ == "__main__":
-    client = MongoClient('mongodb://127.0.0.1:27017')
-    nginx_collection = client.logs.nginx
 
-    total_logs = nginx_collection.count_documents({})
-    total_gets = nginx_collection.count_documents({"method": "GET"})
-    total_posts = nginx_collection.count_documents({"method": "POST"})
-    total_puts = nginx_collection.count_documents({"method": "PUT"})
-    total_patchs = nginx_collection.count_documents({"method": "PATCH"})
-    total_deletes = nginx_collection.count_documents({"method": "DELETE"})
-    total_status = nginx_collection.count_documents(
-                    {"method": "GET", "path": "/status"})
+def nginx_stats_check():
+    """ provides some stats about Nginx logs stored in MongoDB:"""
+    client = MongoClient()
+    collec_nginx = client.logs.nginx
 
-    print("{} logs".format(total_logs))
+    num_of_docs = collec_nginx.count_documents({})
+    print("{} logs".format(num_of_docs))
     print("Methods:")
-    print("\tmethod GET: {}".format(total_gets))
-    print("\tmethod POST: {}".format(total_posts))
-    print("\tmethod PUT: {}".format(total_puts))
-    print("\tmethod PATCH: {}".format(total_patchs))
-    print("\tmethod DELETE: {}".format(total_deletes))
-    print("{} status check".format(total_status))
+
+    methods_list = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+    for method in methods_list:
+        method_count = collec_nginx.count_documents({"method": method})
+        print("\tmethod {}: {}".format(method, method_count))
+    
+    status = collec_nginx.count_documents({"method": "GET", "path": "/status"})
+    print("{} status check".format(status))
+
+
+if __name__ == "__main__":
+    nginx_stats_check()
