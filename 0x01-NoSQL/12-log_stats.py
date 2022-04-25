@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
 """
-Where can I learn Python?
+Module 12-log_stats.py
 """
 from pymongo import MongoClient
 
 if __name__ == "__main__":
     client = MongoClient('mongodb://127.0.0.1:27017')
     nginx_collection = client.logs.nginx
-    number = nginx_collection.count()
-    number_get = nginx_collection.find({"method": "GET"}).count()
-    number_post = nginx_collection.find({"method": "POST"}).count()
-    number_put = nginx_collection.find({"method": "PUT"}).count()
-    number_patch = nginx_collection.find({"method": "PATCH"}).count()
-    number_delete = nginx_collection.find({"method": "DELETE"}).count()
-    number_status = nginx_collection.find(
-        {"method": "GET", "path": "/status"}).count()
 
-    print("{} logs".format(number))
+    total_logs = nginx_collection.count_documents({})
+    total_gets = nginx_collection.count_documents({"method": "GET"})
+    total_posts = nginx_collection.count_documents({"method": "POST"})
+    total_puts = nginx_collection.count_documents({"method": "PUT"})
+    total_patchs = nginx_collection.count_documents({"method": "PATCH"})
+    total_deletes = nginx_collection.count_documents({"method": "DELETE"})
+    total_status = nginx_collection.count_documents(
+                    {"method": "GET", "path": "/status"})
+
+    print("{} logs".format(total_logs))
     print("Methods:")
-    print("\tmethod GET: {}".format(number_get))
-    print("\tmethod POST: {}".format(number_post))
-    print("\tmethod PUT: {}".format(number_put))
-    print("\tmethod PATCH: {}".format(number_patch))
-    print("\tmethod DELETE: {}".format(number_delete))
-    print("{} status check".format(number_status))
+    print("\tmethod GET: {}".format(total_gets))
+    print("\tmethod POST: {}".format(total_posts))
+    print("\tmethod PUT: {}".format(total_puts))
+    print("\tmethod PATCH: {}".format(total_patchs))
+    print("\tmethod DELETE: {}".format(total_deletes))
+    print("{} status check".format(total_status))
