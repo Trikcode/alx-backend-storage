@@ -1,28 +1,42 @@
 #!/usr/bin/env python3
-"""Defines a function that  provides some stats
-   about Nginx logs stored in MongoDB
 """
-
+Contains function that provides some stats and more
+resent IPS about Nginx logs stored in MongoDB:
+"""
 from pymongo import MongoClient
 
 
-def nginx_stats_check():
-    """ provides some stats about Nginx logs stored in MongoDB:"""
-    client = MongoClient()
-    collec_nginx = client.logs.nginx
-
-    num_of_docs = collec_nginx.count_documents({})
-    print("{} logs".format(num_of_docs))
+def log_stats(mongo_collection):
+    """
+    Prints some stats about Nginx logs stored in MongoDB
+    and resent most common IPs.
+    Args:
+        mongo_collection: MongoDB collection object
+    Returns:
+        Nothing
+    """
+    num_logs = mongo_collection.count_documents({})
+    print("{} logs".format(num_logs))
     print("Methods:")
-
-    methods_list = ["GET", "POST", "PUT", "PATCH", "DELETE"]
-    for method in methods_list:
-        method_count = collec_nginx.count_documents({"method": method})
-        print("\tmethod {}: {}".format(method, method_count))
-    
-    status = collec_nginx.count_documents({"method": "GET", "path": "/status"})
-    print("{} status check".format(status))
+    methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+    for method in methods:
+        docs = mongo_collection.count_documents({"method": method})
+        print("\tmethod {}: {}".format(method, docs))
+    route = mongo_collection.count_documents({"method": "GET",
+                                              "path": "/status"})
+    print("{} status check".format(route))
+    print("IPs:")
+    ips = mongo_collection.aggregate([
+        {"$group": {"_id": "$ip", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ])
+    for ip in ips:
+        print("\t{}: {}".format(ip["_id"], ip["count"]))
 
 
 if __name__ == "__main__":
-    nginx_stats_check()
+    with MongoClient() as client:
+        db = client.logs
+        collection = db.nginx
+        log_stats(collection)
