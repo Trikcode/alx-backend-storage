@@ -1,42 +1,27 @@
 #!/usr/bin/env python3
 """
-Contains function that provides some stats and more
-resent IPS about Nginx logs stored in MongoDB:
+script that provides some stats about Nginx logs stored in MongoDB
 """
 from pymongo import MongoClient
 
 
-def log_stats(mongo_collection):
-    """
-    Prints some stats about Nginx logs stored in MongoDB
-    and resent most common IPs.
-    Args:
-        mongo_collection: MongoDB collection object
-    Returns:
-        Nothing
-    """
-    num_logs = mongo_collection.count_documents({})
-    print("{} logs".format(num_logs))
-    print("Methods:")
-    methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
-    for method in methods:
-        docs = mongo_collection.count_documents({"method": method})
-        print("\tmethod {}: {}".format(method, docs))
-    route = mongo_collection.count_documents({"method": "GET",
-                                              "path": "/status"})
-    print("{} status check".format(route))
-    print("IPs:")
-    ips = mongo_collection.aggregate([
-        {"$group": {"_id": "$ip", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": 10}
-    ])
-    for ip in ips:
-        print("\t{}: {}".format(ip["_id"], ip["count"]))
-
-
 if __name__ == "__main__":
-    with MongoClient() as client:
-        db = client.logs
-        collection = db.nginx
-        log_stats(collection)
+    client = MongoClient('mongodb://127.0.0.1:27017')
+    nginx_logs = client.logs.nginx
+    # get number of documents in collection
+    docs_num = nginx_logs.count_documents({})
+    get_num = nginx_logs.count_documents({'method': 'GET'})
+    post_num = nginx_logs.count_documents({'method': 'POST'})
+    put_num = nginx_logs.count_documents({'method': 'PUT'})
+    patch_num = nginx_logs.count_documents({'method': 'PATCH'})
+    delete_num = nginx_logs.count_documents({'method': 'DELETE'})
+    get_status = nginx_logs.count_documents({'method': 'GET',
+                                             'path': '/status'})
+    print("{} logs".format(docs_num))
+    print("Methods:")
+    print("\tmethod GET: {}".format(get_num))
+    print("\tmethod POST: {}".format(post_num))
+    print("\tmethod PUT: {}".format(put_num))
+    print("\tmethod PATCH: {}".format(patch_num))
+    print("\tmethod DELETE: {}".format(delete_num))
+    print("{} status check".format(get_status))
